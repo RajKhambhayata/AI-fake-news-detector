@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prediction History – FakeGuard AI</title>
+  <meta name="description" content="View your recent AI fake news detection results."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-card:    rgba(30, 41, 59, 0.7);
+      --accent:     #0dc8f2;
+      --green:      #22c55e;
+      --red:        #ef4444;
+      --text-primary: #f1f5f9;
+      --text-muted:   #94a3b8;
+      --border:       rgba(148, 163, 184, 0.12);
+      --glow-blue:  0 0 30px rgba(13, 200, 242, 0.25);
+      --radius:     12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg-primary); color: var(--text-primary);
+      min-height: 100vh;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(13,200,242,0.15), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(99,102,241,0.12), transparent);
+    }
+
+    /* ─── Navbar ─────────────────────────────────────────────────────────── */
+    nav {
+      display:flex; justify-content:space-between; align-items:center;
+      padding: 20px 40px; border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px); background: rgba(15,23,42,0.6);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-size:1.4rem; font-weight:700; color:var(--accent); letter-spacing:-0.5px; }
+    .logo span { color:var(--text-primary); }
+    nav a {
+      color:var(--text-muted); text-decoration:none; font-weight:500;
+      padding:8px 18px; border-radius:8px; border:1px solid var(--border); transition:all 0.3s;
+    }
+    nav a:hover { border-color:var(--accent); color:var(--accent); box-shadow:var(--glow-blue); }
+
+    /* ─── Main ───────────────────────────────────────────────────────────── */
+    main { max-width: 960px; margin:0 auto; padding: 60px 24px 80px; }
+
+    .page-header { margin-bottom: 40px; }
+    .page-header h1 { font-size: 2rem; font-weight: 700; letter-spacing:-0.5px; }
+    .page-header p  { color:var(--text-muted); margin-top:6px; }
+
+    /* ─── Stats Banner ───────────────────────────────────────────────────── */
+    .summary-row {
+      display:grid; grid-template-columns: repeat(3,1fr); gap:16px; margin-bottom:36px;
+    }
+    .summary-card {
+      background: var(--bg-card); border:1px solid var(--border);
+      border-radius:var(--radius); padding:20px 24px;
+      backdrop-filter:blur(12px);
+    }
+    .summary-card .num { font-size:2rem; font-weight:700; }
+    .summary-card .lbl { font-size:0.8rem; color:var(--text-muted); margin-top:4px; }
+    .summary-card.total .num { color:var(--accent); }
+    .summary-card.real  .num { color:var(--green); }
+    .summary-card.fake  .num { color:var(--red); }
+
+    /* ─── Table Card ─────────────────────────────────────────────────────── */
+    .table-card {
+      background: var(--bg-card); border:1px solid var(--border);
+      border-radius:20px; overflow:hidden; backdrop-filter:blur(12px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    table { width:100%; border-collapse:collapse; }
+    thead { background: rgba(13,200,242,0.05); border-bottom:1px solid var(--border); }
+    th {
+      padding:16px 20px; text-align:left; font-size:0.75rem; font-weight:600;
+      color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;
+    }
+    tbody tr {
+      border-bottom:1px solid var(--border); transition:background 0.2s;
+    }
+    tbody tr:last-child { border-bottom:none; }
+    tbody tr:hover { background:rgba(255,255,255,0.03); }
+    td { padding:18px 20px; font-size:0.9rem; vertical-align:middle; }
+
+    .snippet {
+      max-width:340px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      color:var(--text-muted);
+    }
+
+    /* ─── Verdict Badge ──────────────────────────────────────────────────── */
+    .badge {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:5px 12px; border-radius:100px; font-size:0.8rem; font-weight:700;
+      white-space:nowrap;
+    }
+    .badge.real { background:rgba(34,197,94,0.15); color:var(--green); border:1px solid rgba(34,197,94,0.3); }
+    .badge.fake { background:rgba(239,68,68,0.15); color:var(--red);   border:1px solid rgba(239,68,68,0.3); }
+
+    /* ─── Mini Progress Bar ──────────────────────────────────────────────── */
+    .mini-bar-wrap { display:flex; align-items:center; gap:10px; min-width:140px; }
+    .mini-bar-track {
+      flex:1; height:6px; background:rgba(255,255,255,0.08); border-radius:100px; overflow:hidden;
+    }
+    .mini-bar-fill { height:100%; border-radius:100px; }
+    .mini-bar-fill.real-fill { background:linear-gradient(90deg,#15803d,#22c55e); }
+    .mini-bar-fill.fake-fill { background:linear-gradient(90deg,#991b1b,#ef4444); }
+    .mini-bar-pct  { font-size:0.8rem; color:var(--text-muted); min-width:42px; text-align:right; }
+
+    /* ─── Empty State ────────────────────────────────────────────────────── */
+    .empty-state {
+      text-align:center; padding:80px 20px; color:var(--text-muted);
+    }
+    .empty-state .icon { font-size:3rem; margin-bottom:16px; }
+    .empty-state p { font-size:1rem; }
+    .empty-state a {
+      display:inline-block; margin-top:20px; padding:10px 24px;
+      background:linear-gradient(135deg,#0284c7,#0dc8f2);
+      color:#fff; border-radius:var(--radius); text-decoration:none; font-weight:600;
+      transition:opacity 0.2s;
+    }
+    .empty-state a:hover { opacity:0.85; }
+
+    /* ─── Date ───────────────────────────────────────────────────────────── */
+    .date-cell { color:var(--text-muted); font-size:0.82rem; white-space:nowrap; }
+
+    footer { text-align:center; padding:30px; color:var(--text-muted); font-size:0.85rem; border-top:1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">🔍 FakeGuard <span>AI</span></div>
+  <a href="/">⚡ Analyze News</a>
+</nav>
+
+<main>
+  <div class="page-header">
+    <h1>📋 Prediction History</h1>
+    <p>Your recent AI-powered news analysis results</p>
+  </div>
+
+  <!-- Summary Cards -->
+  {% if records %}
+  <div class="summary-row">
+    <div class="summary-card total">
+      <div class="num">{{ records|length }}</div>
+      <div class="lbl">Total Analyses</div>
+    </div>
+    <div class="summary-card real">
+      <div class="num">{{ real_count }}</div>
+      <div class="lbl">Real News Found</div>
+    </div>
+    <div class="summary-card fake">
+      <div class="num">{{ fake_count }}</div>
+      <div class="lbl">Fake News Found</div>
+    </div>
+  </div>
+
+  <!-- History Table -->
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>News Snippet</th>
+          <th>Verdict</th>
+          <th>Confidence</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for record in records %}
+        <tr>
+          <td style="color:var(--text-muted);font-size:0.8rem;">{{ forloop.counter }}</td>
+          <td class="snippet" title="{{ record.news_text }}">{{ record.news_text|truncatechars:100 }}</td>
+          <td>
+            {% if record.prediction == "Real News" %}
+            <span class="badge real">✅ Real News</span>
+            {% else %}
+            <span class="badge fake">⚠️ Fake News</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="mini-bar-wrap">
+              <div class="mini-bar-track">
+                <div class="mini-bar-fill {% if record.prediction == 'Real News' %}real-fill{% else %}fake-fill{% endif %}"
+                     style="width: {{ record.confidence_score|floatformat:0 }}%"></div>
+              </div>
+              <span class="mini-bar-pct">{{ record.confidence_score|floatformat:1 }}%</span>
+            </div>
+          </td>
+          <td class="date-cell">{{ record.created_at|date:"M d, Y H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-card">
+    <div class="empty-state">
+      <div class="icon">🔍</div>
+      <p>No predictions yet. Analyze your first article to see results here!</p>
+      <a href="/">Start Analyzing →</a>
+    </div>
+  </div>
+  {% endif %}
+
+</main>
+
+<footer>FakeGuard AI &mdash; Built with Django &amp; Scikit-learn &bull; For educational purposes only.</footer>
+
+</body>
+</html>

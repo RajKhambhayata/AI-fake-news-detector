@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FakeGuard AI – Fake News Detector</title>
+  <meta name="description" content="Use AI to detect fake news. Paste any headline or article and get an instant prediction powered by Machine Learning."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* ─── CSS Variables ────────────────────────────────────────────────────── */
+    :root {
+      --bg-primary:   #0f172a;
+      --bg-card:      rgba(30, 41, 59, 0.7);
+      --bg-input:     rgba(15, 23, 42, 0.8);
+      --accent:       #0dc8f2;
+      --accent-dark:  #0284c7;
+      --green:        #22c55e;
+      --red:          #ef4444;
+      --text-primary: #f1f5f9;
+      --text-muted:   #94a3b8;
+      --border:       rgba(148, 163, 184, 0.12);
+      --glow-blue:    0 0 30px rgba(13, 200, 242, 0.25);
+      --glow-green:   0 0 30px rgba(34, 197, 94, 0.3);
+      --glow-red:     0 0 30px rgba(239, 68, 68, 0.3);
+      --radius:       12px;
+    }
+
+    /* ─── Reset ────────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── Animated Background ──────────────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(13,200,242,0.15), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(99,102,241,0.12), transparent);
+    }
+
+    /* ─── Navbar ────────────────────────────────────────────────────────────── */
+    nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      background: rgba(15,23,42,0.6);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-size: 1.4rem; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+    .logo span { color: var(--text-primary); }
+    nav a {
+      color: var(--text-muted); text-decoration: none; font-weight: 500;
+      padding: 8px 18px; border-radius: 8px; border: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+    nav a:hover { border-color: var(--accent); color: var(--accent); box-shadow: var(--glow-blue); }
+
+    /* ─── Main Layout ───────────────────────────────────────────────────────── */
+    main { max-width: 760px; margin: 0 auto; padding: 60px 24px 80px; }
+
+    /* ─── Hero ──────────────────────────────────────────────────────────────── */
+    .hero { text-align: center; margin-bottom: 48px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(13,200,242,0.1); border: 1px solid rgba(13,200,242,0.3);
+      color: var(--accent); font-size: 0.8rem; font-weight: 600;
+      padding: 6px 14px; border-radius: 100px; margin-bottom: 24px;
+      letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .hero-badge::before { content: '●'; font-size: 0.5rem; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.2rem);
+      font-weight: 700; line-height: 1.15; letter-spacing: -1px; margin-bottom: 16px;
+      background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero p { color: var(--text-muted); font-size: 1.1rem; max-width: 480px; margin: 0 auto; }
+
+    /* ─── Analyzer Card ─────────────────────────────────────────────────────── */
+    .analyzer-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      transition: box-shadow 0.3s;
+    }
+    .analyzer-card:focus-within { box-shadow: 0 20px 60px rgba(0,0,0,0.4), var(--glow-blue); }
+
+    label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    textarea {
+      width: 100%; height: 200px;
+      background: var(--bg-input); color: var(--text-primary);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px 20px; font-family: 'Space Grotesk', sans-serif; font-size: 1rem;
+      resize: vertical; outline: none; transition: border-color 0.3s, box-shadow 0.3s;
+      line-height: 1.6;
+    }
+    textarea::placeholder { color: var(--text-muted); }
+    textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(13,200,242,0.15); }
+
+    .btn-analyze {
+      display: block; width: 100%; margin-top: 20px;
+      padding: 16px; border: none; border-radius: var(--radius);
+      background: linear-gradient(135deg, #0284c7, #0dc8f2);
+      color: #fff; font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.05rem; font-weight: 700; letter-spacing: 0.3px;
+      cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden;
+    }
+    .btn-analyze::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, #0dc8f2, #0284c7);
+      opacity: 0; transition: opacity 0.4s;
+    }
+    .btn-analyze:hover::after { opacity: 1; }
+    .btn-analyze span { position: relative; z-index: 1; }
+    .btn-analyze:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ─── Stats Row ─────────────────────────────────────────────────────────── */
+    .stats-row {
+      display: flex; justify-content: center; gap: 40px;
+      margin-top: 40px; flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* ─── Result Card ───────────────────────────────────────────────────────── */
+    .result-card {
+      margin-top: 28px; padding: 32px 36px;
+      border-radius: 20px; border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      display: none; animation: slideUp 0.5s ease;
+    }
+    @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+    .result-card.real { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.35); box-shadow: var(--glow-green); }
+    .result-card.fake { background: rgba(239,68,68,0.08);   border-color: rgba(239,68,68,0.35);  box-shadow: var(--glow-red); }
+    .result-card.loading { background: var(--bg-card); border-color: rgba(13,200,242,0.3); box-shadow: var(--glow-blue); }
+
+    .result-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .result-icon { font-size: 2.8rem; line-height: 1; }
+    .result-title { font-size: 1.7rem; font-weight: 700; }
+    .result-card.real .result-title { color: var(--green); }
+    .result-card.fake .result-title { color: var(--red); }
+    .result-card.loading .result-title { color: var(--accent); }
+
+    .result-message { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px; }
+
+    /* ─── Gauge ─────────────────────────────────────────────────────────────── */
+    .gauge-container { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .gauge-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    svg.gauge { overflow: visible; }
+
+    /* ─── Confidence Bar ────────────────────────────────────────────────────── */
+    .confidence-bar-wrap { margin-top: 4px; }
+    .confidence-bar-label { display:flex; justify-content:space-between; font-size:0.8rem; color: var(--text-muted); margin-bottom:6px; }
+    .confidence-bar-track { height: 8px; background: rgba(255,255,255,0.08); border-radius: 100px; overflow: hidden; }
+    .confidence-bar-fill  { height: 100%; border-radius: 100px; width: 0; transition: width 1s ease; }
+    .result-card.real .confidence-bar-fill { background: linear-gradient(90deg, #15803d, #22c55e); }
+    .result-card.fake .confidence-bar-fill { background: linear-gradient(90deg, #991b1b, #ef4444); }
+
+    /* ─── Error ─────────────────────────────────────────────────────────────── */
+    .error-box {
+      display: none; margin-top: 16px; padding: 14px 20px;
+      border-radius: var(--radius); background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; font-size: 0.9rem;
+    }
+
+    /* ─── Loading Spinner ───────────────────────────────────────────────────── */
+    .spinner {
+      width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.8s linear infinite; display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Footer ────────────────────────────────────────────────────────────── */
+    footer { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="logo">🔍 FakeGuard <span>AI</span></div>
+  <a href="/history/">📋 History</a>
+</nav>
+
+<!-- ── Main ───────────────────────────────────────────────────────────────── -->
+<main>
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">AI Powered Analysis</div>
+    <h1>Is This News Real or Fake?</h1>
+    <p>Paste any news headline or full article below. Our AI model — trained on 40,000+ articles — will classify it in seconds.</p>
+  </div>
+
+  <!-- Analyzer Card -->
+  <div class="analyzer-card">
+    <label for="newsText">News Headline or Article</label>
+    <textarea id="newsText" placeholder="e.g. Scientists discover a new planet in our solar system that may support life..."></textarea>
+    <button id="analyzeBtn" class="btn-analyze" onclick="analyzeNews()">
+      <span id="btnText">⚡ Analyze Now</span>
+    </button>
+    <div id="errorBox" class="error-box"></div>
+  </div>
+
+  <!-- Result Card (hidden until response) -->
+  <div id="resultCard" class="result-card">
+    <div class="result-header">
+      <div class="result-icon" id="resultIcon"></div>
+      <div>
+        <div class="result-title" id="resultTitle"></div>
+        <div style="color:var(--text-muted);font-size:0.85rem;margin-top:4px;">AI Confidence Score</div>
+      </div>
+    </div>
+    <p class="result-message" id="resultMessage"></p>
+
+    <!-- Confidence bar -->
+    <div class="confidence-bar-wrap">
+      <div class="confidence-bar-label">
+        <span>Confidence</span>
+        <span id="confPct"></span>
+      </div>
+      <div class="confidence-bar-track">
+        <div class="confidence-bar-fill" id="confFill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat"><div class="stat-value">40K+</div><div class="stat-label">Articles Trained</div></div>
+    <div class="stat"><div class="stat-value">95%+</div><div class="stat-label">Accuracy Rate</div></div>
+    <div class="stat"><div class="stat-value">NLP</div><div class="stat-label">Powered Engine</div></div>
+    <div class="stat"><div class="stat-value">&lt; 1s</div><div class="stat-label">Analysis Time</div></div>
+  </div>
+</main>
+
+<footer>FakeGuard AI &mdash; Built with Django &amp; Scikit-learn &bull; For educational purposes only.</footer>
+
+<!-- ── JavaScript ──────────────────────────────────────────────────────────── -->
+<script>
+  const btn       = document.getElementById('analyzeBtn');
+  const btnText   = document.getElementById('btnText');
+  const errorBox  = document.getElementById('errorBox');
+  const resultCard= document.getElementById('resultCard');
+
+  async function analyzeNews() {
+    const text = document.getElementById('newsText').value.trim();
+
+    // Hide previous results
+    resultCard.style.display = 'none';
+    errorBox.style.display   = 'none';
+    resultCard.className     = 'result-card';
+
+    if (!text) {
+      showError('Please paste a news headline or article first.');
+      return;
+    }
+    if (text.length < 10) {
+      showError('The text is too short. Please provide more content.');
+      return;
+    }
+
+    // Loading state
+    setLoading(true);
+
+    try {
+      const res  = await fetch('/api/predict/', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ text }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Server error');
+
+      showResult(data);
+    } catch (err) {
+      showError(err.message || 'Could not connect to server. Make sure Django is running.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function showResult(data) {
+    const isReal   = data.is_real;
+    const confNum  = parseFloat(data.confidence);
+
+    resultCard.className = 'result-card ' + (isReal ? 'real' : 'fake');
+    document.getElementById('resultIcon').textContent    = isReal ? '✅' : '⚠️';
+    document.getElementById('resultTitle').textContent   = data.prediction.toUpperCase();
+    document.getElementById('resultMessage').textContent = isReal
+      ? 'This article shows strong patterns consistent with credible, factual news sources.'
+      : 'This article displays characteristics commonly associated with misinformation or fabricated content.';
+    document.getElementById('confPct').textContent  = confNum.toFixed(1) + '%';
+
+    resultCard.style.display = 'block';
+
+    // Animate confidence bar after a tiny delay
+    setTimeout(() => {
+      document.getElementById('confFill').style.width = confNum + '%';
+    }, 100);
+  }
+
+  function showError(msg) {
+    errorBox.textContent     = '⚠️ ' + msg;
+    errorBox.style.display   = 'block';
+  }
+
+  function setLoading(isLoading) {
+    btn.disabled = isLoading;
+    btnText.innerHTML = isLoading
+      ? '<span class="spinner"></span> Analyzing...'
+      : '⚡ Analyze Now';
+  }
+
+  // Allow Ctrl+Enter to submit
+  document.getElementById('newsText').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) analyzeNews();
+  });
+</script>
+</body>
+</html>

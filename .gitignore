@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# Database
+db.sqlite3
+
+# Dataset
+*.csv
+model.pkl
+vectorizer.pkl
+
+# IDEs
+.vscode/
+.idea/
