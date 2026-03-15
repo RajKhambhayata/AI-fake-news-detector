@@ -78,8 +78,19 @@ def history_page():
     real_count = sum(1 for r in records if r['prediction'] == 'Real News')
     fake_count = len(records) - real_count
 
-    # Convert records to dict for easy use in template, though Row acts like dict
-    return render_template('history.html', records=records, real_count=real_count, fake_count=fake_count)
+    # Process records for Jinja2 compatibility (format dates)
+    formatted_records = []
+    for r in records:
+        record_dict = dict(r)
+        dt_str = record_dict['created_at']
+        try:
+            dt = datetime.strptime(dt_str, '%Y-%m-%d %H:%M:%S')
+            record_dict['created_at_formatted'] = dt.strftime('%b %d, %Y %H:%M')
+        except (ValueError, TypeError):
+            record_dict['created_at_formatted'] = dt_str
+        formatted_records.append(record_dict)
+
+    return render_template('history.html', records=formatted_records, real_count=real_count, fake_count=fake_count)
 
 # ── API Views ─────────────────────────────────────────────────────────────────
 @app.route('/api/predict/', methods=['POST'])

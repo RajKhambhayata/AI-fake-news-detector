@@ -178,8 +178,8 @@
       <tbody>
         {% for record in records %}
         <tr>
-          <td style="color:var(--text-muted);font-size:0.8rem;">{{ forloop.counter }}</td>
-          <td class="snippet" title="{{ record.news_text }}">{{ record.news_text|truncatechars:100 }}</td>
+          <td style="color:var(--text-muted);font-size:0.8rem;">{{ loop.index }}</td>
+          <td class="snippet" title="{{ record.news_text }}">{{ record.news_text|truncate(100) }}</td>
           <td>
             {% if record.prediction == "Real News" %}
             <span class="badge real">✅ Real News</span>
@@ -191,12 +191,12 @@
             <div class="mini-bar-wrap">
               <div class="mini-bar-track">
                 <div class="mini-bar-fill {% if record.prediction == 'Real News' %}real-fill{% else %}fake-fill{% endif %}"
-                     style="width: {{ record.confidence_score|floatformat:0 }}%"></div>
+                     style="width: {{ record.confidence_score|round|int }}%"></div>
               </div>
-              <span class="mini-bar-pct">{{ record.confidence_score|floatformat:1 }}%</span>
+              <span class="mini-bar-pct">{{ record.confidence_score|round(1) }}%</span>
             </div>
           </td>
-          <td class="date-cell">{{ record.created_at|date:"M d, Y H:i" }}</td>
+          <td class="date-cell">{{ record.created_at_formatted }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -214,7 +214,7 @@
 
 </main>
 
-<footer>FakeGuard AI &mdash; Built with Django &amp; Scikit-learn &bull; For educational purposes only.</footer>
+<footer>FakeGuard AI &mdash; Built with Flask &amp; Scikit-learn &bull; For educational purposes only.</footer>
 
 </body>
 </html>
